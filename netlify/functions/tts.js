@@ -3,8 +3,6 @@
  * Keeps ELEVENLABS_API_KEY server-side only.
  */
 
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-
 const ARABIC_VOICE  = process.env.ELEVENLABS_ARABIC_VOICE_ID
 const ENGLISH_VOICE = '21m00Tcm4TlvDq8ikWAM'
 const API_KEY       = process.env.ELEVENLABS_API_KEY
@@ -12,6 +10,13 @@ const API_KEY       = process.env.ELEVENLABS_API_KEY
 export default async function handler(req) {
   if (req.method !== 'POST') {
     return new Response('Method not allowed', { status: 405 })
+  }
+
+  if (!API_KEY) {
+    return new Response(JSON.stringify({ error: 'TTS not configured' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   try {
