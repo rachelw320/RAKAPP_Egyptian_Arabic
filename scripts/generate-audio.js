@@ -30,8 +30,8 @@ const ARABIC_VOICE   = process.env.ELEVENLABS_ARABIC_VOICE_ID
 const ENGLISH_VOICE  = '21m00Tcm4TlvDq8ikWAM'
 
 if (!API_KEY || !ARABIC_VOICE) {
-  console.error('❌  Missing ELEVENLABS_API_KEY or ELEVENLABS_ARABIC_VOICE_ID in .env')
-  process.exit(1)
+  console.log('⚠️  Missing ELEVENLABS_API_KEY or ELEVENLABS_ARABIC_VOICE_ID — skipping audio generation')
+  process.exit(0)
 }
 
 const cards = JSON.parse(readFileSync(join(ROOT, 'src/data/cards.json'), 'utf-8'))
