@@ -38,6 +38,13 @@ export default function StudyScreen({ mode, onBack }: Props) {
 
   const card = cards[index]
 
+  // Auto-play Arabic audio when a new card appears on screen
+  useEffect(() => {
+    if (card && mode !== 'speaking') {
+      playTTS(card.arabic, 'ar').catch(() => {})
+    }
+  }, [index, card, mode])
+
   // Merge in any custom cards from Supabase
   useEffect(() => {
     supabase.from('cards').select('*').then(({ data }) => {
