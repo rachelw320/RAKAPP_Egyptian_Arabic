@@ -3,7 +3,7 @@ import type { Card, CardProgress, StudyMode, SRSGrade, SpeakingResult } from '..
 import { supabase } from '../lib/supabase'
 import { calculateNextReview, newCardProgress } from '../lib/srs'
 import { checkAnswer } from '../lib/fuzzyMatch'
-import { playAudio } from './AudioButton'
+import { playTTS } from './AudioButton'
 import FlashCard from './FlashCard'
 import SRSButtons from './SRSButtons'
 import allCards from '../data/cards.json'
@@ -38,6 +38,13 @@ export default function StudyScreen({ mode, onBack }: Props) {
 
   const card = cards[index]
 
+  // Auto-play Arabic audio when a new card appears on screen
+  useEffect(() => {
+    if (card && mode !== 'speaking') {
+      playTTS(card.arabic, 'ar').catch(() => {})
+    }
+  }, [index, card, mode])
+
   // Merge in any custom cards from Supabase
   useEffect(() => {
     supabase.from('cards').select('*').then(({ data }) => {
@@ -61,8 +68,10 @@ export default function StudyScreen({ mode, onBack }: Props) {
 
   const handleReveal = async () => {
     setUiState('revealed')
-    const audioSrc = (mode === 'reverse' || mode === 'listening') ? card.audio.en : card.audio.ar
-    try { await playAudio(audioSrc) } catch { /* audio may not exist yet */ }
+    const isArabicFirst = mode === 'reverse' || mode === 'listening'
+    const text = isArabicFirst ? card.english.replace(/\s*\([^)]+\)/g, '').trim() : card.arabic
+    const lang = isArabicFirst ? 'en' : 'ar'
+    try { await playTTS(text, lang as 'ar' | 'en') } catch { /* TTS may fail */ }
   }
 
   const handleGrade = (grade: SRSGrade) => {
@@ -87,7 +96,7 @@ export default function StudyScreen({ mode, onBack }: Props) {
     setSpeakingResult({ ...result, recognised: input })
     if (result.passed) {
       setUiState('revealed')
-      playAudio(card.audio.ar).catch(() => {})
+      playTTS(card.arabic, 'ar').catch(() => {})
     }
   }
 
@@ -197,7 +206,7 @@ export default function StudyScreen({ mode, onBack }: Props) {
                   <p className="text-danger text-sm">Not quite — try again</p>
                   <p className="text-textSecondary text-xs">Match: {Math.round(speakingResult.score * 100)}%</p>
                   <button
-                    onClick={() => { setUiState('revealed'); playAudio(card.audio.ar).catch(() => {}) }}
+                    onClick={() => { setUiState('revealed'); playTTS(card.arabic, 'ar').catch(() => {}) }}
                     className="text-textSecondary text-xs underline pressable"
                   >
                     Show answer

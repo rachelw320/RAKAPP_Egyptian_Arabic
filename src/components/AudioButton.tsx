@@ -1,16 +1,16 @@
 import { useState } from 'react'
+import { fetchTTSAudio } from '../lib/ttsAudio'
 
 interface Props {
-  src: string
+  text: string
+  language: 'ar' | 'en'
   label?: string
   size?: 'sm' | 'md' | 'lg'
 }
 
-// A simple reusable audio button.
-// We use a shared Audio element strategy to work around iOS audio unlock.
 let unlockedAudio: HTMLAudioElement | null = null
 
-export function playAudio(src: string): Promise<void> {
+export function playAudioSrc(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
     if (!unlockedAudio) {
       unlockedAudio = new Audio()
@@ -23,7 +23,12 @@ export function playAudio(src: string): Promise<void> {
   })
 }
 
-export default function AudioButton({ src, label, size = 'md' }: Props) {
+export async function playTTS(text: string, language: 'ar' | 'en'): Promise<void> {
+  const src = await fetchTTSAudio(text, language)
+  return playAudioSrc(src)
+}
+
+export default function AudioButton({ text, language, label, size = 'md' }: Props) {
   const [playing, setPlaying] = useState(false)
 
   const sizeClasses = {
@@ -36,9 +41,9 @@ export default function AudioButton({ src, label, size = 'md' }: Props) {
     if (playing) return
     setPlaying(true)
     try {
-      await playAudio(src)
+      await playTTS(text, language)
     } catch {
-      // Audio file may not exist yet (before generate-audio runs)
+      // TTS may fail if function is unavailable
     } finally {
       setPlaying(false)
     }
