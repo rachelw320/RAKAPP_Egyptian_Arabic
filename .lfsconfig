@@ -1,0 +1,6 @@
+[lfs]
+	fetchexclude = *
+[filter "lfs"]
+	required = false
+	smudge = git-lfs smudge --skip -- %f
+	clean = git-lfs clean -- %f
